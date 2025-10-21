@@ -1,5 +1,9 @@
+import 'dart:convert';
+
+import 'package:escolaflutter2023/_root/api.dart';
 import 'package:escolaflutter2023/screens/splash.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Home extends StatefulWidget {
@@ -12,7 +16,13 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   List<dynamic> turmas = [];
   bool carregando = true;
-  String? get dados => null;
+  String? dados;
+
+  @override
+  void initState() {
+    super.initState();
+    listarTurmas();
+  }
 
   Future<void> listarTurmas() async {
     try {
@@ -20,6 +30,22 @@ class _HomeState extends State<Home> {
       if (prefs.containsKey('user_data')) {
         setState(() {
           dados = prefs.getString('user_data');
+        });
+      }
+
+      final uri = Uri.parse(
+        '${Api.baseUrl}${Api.turmaEndpoint}/${jsonDecode(dados!)['id']}',
+      );
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        setState(() {
+          turmas = data;
+        });
+      } else {
+        // Em caso de erro, mantém lista vazia
+        setState(() {
+          turmas = [];
         });
       }
     } catch (e) {
@@ -34,6 +60,8 @@ class _HomeState extends State<Home> {
   }
 
   Future<void> sair() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('user_data');
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const Splash()),
@@ -45,7 +73,7 @@ class _HomeState extends State<Home> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: Text('Home'),
+        title: Text(dados != null ? jsonDecode(dados!)['nome'] : 'Home'),
         actions: [
           Padding(
             padding: const EdgeInsets.all(8.0),
@@ -69,7 +97,7 @@ class _HomeState extends State<Home> {
               'Tela Home',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            Text(dados.toString()),
+            Text(turmas.toString()),
           ],
         ),
       ),
