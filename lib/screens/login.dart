@@ -2,13 +2,13 @@
 
 import 'dart:convert';
 
-import 'package:escolasaep2023/_root/api.dart';
-import 'package:escolasaep2023/_root/app_colors.dart';
-import 'package:escolasaep2023/screens/home.dart';
-import 'package:escolasaep2023/main.dart';
+import 'package:escolaflutter2023/_root/api.dart';
+import 'package:escolaflutter2023/screens/home.dart';
+import 'package:escolaflutter2023/main.dart';
 import 'package:flutter/material.dart';
-import 'package:escolasaep2023/screens/splash.dart';
+import 'package:escolaflutter2023/screens/splash.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -21,6 +21,18 @@ class _LoginState extends State<Login> {
   String email = '';
   String senha = '';
   bool _isLoading = false;
+
+  Future<void> toHome(String dados) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_data', dados);
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const Home()),
+      );
+    }
+  }
+
   Future<void> handleLogin() async {
     if (email.isEmpty || senha.isEmpty) {
       // Exibir mensagem de erro
@@ -60,11 +72,7 @@ class _LoginState extends State<Login> {
 
       if (!mounted) return;
       if (response.statusCode == 200) {
-        // Login bem-sucedido
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const Home()),
-        );
+        toHome(response.body.toString());
       } else {
         // Exibir mensagem de erro
         final responseData = jsonDecode(response.body);

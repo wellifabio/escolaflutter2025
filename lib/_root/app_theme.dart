@@ -1,10 +1,17 @@
-import 'package:escolasaep2023/_root/app_colors.dart';
+import 'package:escolaflutter2023/_root/app_colors.dart';
 import 'package:flutter/material.dart';
 
 abstract class AppTheme {
   // Tema Claro (original)
   static ThemeData lightTheme = ThemeData.light().copyWith(
     scaffoldBackgroundColor: AppColors.c1,
+    appBarTheme: AppBarTheme(
+      titleTextStyle: TextStyle(
+        color: AppColors.c4,
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: AppColors.c1,

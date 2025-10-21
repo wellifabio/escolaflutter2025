@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:escolasaep2023/_root/app_theme.dart';
-import 'package:escolasaep2023/screens/splash.dart';
+import 'package:escolaflutter2023/_root/app_theme.dart';
+import 'package:escolaflutter2023/screens/splash.dart';
 
 // Notificador global para controlar o tema
 final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier<ThemeMode>(

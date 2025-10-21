@@ -1,6 +1,6 @@
-import 'package:escolasaep2023/_root/app_colors.dart';
+import 'package:escolaflutter2023/_root/app_colors.dart';
 import 'package:flutter/material.dart';
-import 'package:escolasaep2023/screens/login.dart';
+import 'package:escolaflutter2023/screens/login.dart';
 
 class Splash extends StatefulWidget {
   const Splash({super.key});
