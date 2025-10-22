@@ -98,16 +98,6 @@ class _HomeState extends State<Home> {
     }
   }
 
-  Future<void> sair() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('user_data');
-    if (!mounted) return;
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const Splash()),
-    );
-  }
-
   Future<void> modalCadastro() async {
     showDialog(
       context: context,
@@ -269,6 +259,28 @@ class _HomeState extends State<Home> {
     );
   }
 
+  Future<void> toAtividades(String id, String nome) async {
+    final prefs = await SharedPreferences.getInstance();
+    final String turma = '{"id":$id, "nome":"$nome"}';
+    await prefs.setString('turma', turma);
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const Atividades()),
+      );
+    }
+  }
+
+  Future<void> sair() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('user_data');
+    if (!mounted) return;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const Splash()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -349,12 +361,7 @@ class _HomeState extends State<Home> {
                                   backgroundColor: AppColors.c5,
                                 ),
                                 onPressed: () {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const Atividades(),
-                                    ),
-                                  );
+                                  toAtividades(id.toString(), nome.toString());
                                 },
                                 child: Text(
                                   'Visualizar',

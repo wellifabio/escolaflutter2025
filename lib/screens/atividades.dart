@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:escolaflutter2023/_root/api.dart';
 import 'package:escolaflutter2023/screens/home.dart';
+import 'package:escolaflutter2023/_root/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -17,25 +18,27 @@ class _AtividadesState extends State<Atividades> {
   List<dynamic> atividades = [];
   bool carregando = true;
   String? dados;
+  String? turma;
   String? turmaId;
   String descricao = '';
 
   @override
   void initState() {
     super.initState();
-    listaratividades();
+    listarAtividades();
   }
 
-  Future<void> listaratividades() async {
+  Future<void> listarAtividades() async {
     setState(() {
       carregando = true;
     });
+
     try {
       final prefs = await SharedPreferences.getInstance();
-      if (!prefs.containsKey('user_data')) {
-        // Se não há dados do usuário, limpa e retorna
+      if (!prefs.containsKey('user_data') && !prefs.containsKey('turma')) {
         setState(() {
           dados = null;
+          turma = null;
           atividades = [];
           carregando = false;
         });
@@ -43,8 +46,8 @@ class _AtividadesState extends State<Atividades> {
       }
 
       dados = prefs.getString('user_data');
+      turma = prefs.getString('turma');
 
-      // Protege caso o JSON não contenha 'id'
       final decoded = jsonDecode(dados!);
       if (decoded == null || decoded['id'] == null) {
         setState(() {
@@ -53,22 +56,20 @@ class _AtividadesState extends State<Atividades> {
         });
         return;
       }
+
       setState(() {
-        turmaId = decoded['id'].toString();
+        turmaId = jsonDecode(turma!)['id'].toString();
       });
+
       final uri = Uri.parse('${Api.baseUrl}${Api.atividadeEndpoint}/$turmaId');
       final response = await http.get(uri);
-
       if (response.statusCode == 200) {
-        // Tenta decodificar como lista. Se vier um objeto, trata como lista vazia.
         final dynamic body = json.decode(response.body);
         if (body is List) {
           setState(() {
             atividades = body;
           });
         } else {
-          // Se o endpoint retornar um objeto, tente extrair a lista correta
-          // Exemplo: {"data": [...]}
           if (body is Map && body['data'] is List) {
             setState(() {
               atividades = body['data'];
@@ -94,13 +95,6 @@ class _AtividadesState extends State<Atividades> {
         carregando = false;
       });
     }
-  }
-
-  Future<void> sair() async {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const Home()),
-    );
   }
 
   Future<void> modalCadastro() async {
@@ -165,7 +159,7 @@ class _AtividadesState extends State<Atividades> {
                       ],
                     ),
                   );
-                  listaratividades();
+                  listarAtividades();
                 } else {
                   showDialog(
                     context: context,
@@ -204,6 +198,63 @@ class _AtividadesState extends State<Atividades> {
     );
   }
 
+  Future<void> excluir(String atividade) async {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Excluir'),
+        content: Text('Confirma a exclusão da atividade: $atividade'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cancelar',
+              style: TextStyle(color: AppColors.c5),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                final url = Uri.parse(
+                  '${Api.baseUrl}${Api.atividadeEndpoint}/$atividade',
+                );
+                final resp = await http.delete(url);
+                if (resp.statusCode == 200 || resp.statusCode == 204) {
+                  listarAtividades();
+                }
+              } catch (e) {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Erro'),
+                    content: Text('$e'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('OK'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+            },
+            child: const Text('Ok', style: TextStyle(color: AppColors.c6)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> sair() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('turma');
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const Home()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -211,7 +262,7 @@ class _AtividadesState extends State<Atividades> {
         backgroundColor: Colors.transparent,
         title: Text(
           dados != null
-              ? jsonDecode(dados!)['descricao'] ?? 'Atividades'
+              ? jsonDecode(dados!)['nome'] ?? 'Atividades'
               : 'Atividades',
         ),
         actions: [
@@ -242,8 +293,8 @@ class _AtividadesState extends State<Atividades> {
               child: const Text('  Cadastrar atividade  '),
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Atividades',
+            Text(
+              'Turma: ${jsonDecode(turma!)['nome']}',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
@@ -263,8 +314,25 @@ class _AtividadesState extends State<Atividades> {
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 6.0),
                           child: Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [Text('$id - $descricao')],
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Text('$id - $descricao'),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.c6,
+                                  ),
+                                  onPressed: () {
+                                    excluir(id.toString());
+                                  },
+                                  child: Text(
+                                    'Excluir',
+                                    style: TextStyle(color: AppColors.c1),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         );
                       },
