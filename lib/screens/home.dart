@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:escolaflutter2023/_root/api.dart';
 import 'package:escolaflutter2023/_root/app_colors.dart';
+import 'package:escolaflutter2023/screens/atividades.dart';
 import 'package:escolaflutter2023/screens/splash.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -188,7 +189,7 @@ class _HomeState extends State<Home> {
                   context: context,
                   builder: (context) => AlertDialog(
                     title: const Text('Erro'),
-                    content: const Text('Erro ao conectar a API.'),
+                    content: Text('Erro ao conectar a API. erro: $e'),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context),
@@ -200,6 +201,68 @@ class _HomeState extends State<Home> {
               }
             },
             child: const Text('Cadastrar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> excluir(String turma) async {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Excluir'),
+        content: Text('Confirma a exclusão da turma: $turma'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cancelar',
+              style: TextStyle(color: AppColors.c5),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                final url = Uri.parse(
+                  '${Api.baseUrl}${Api.turmaEndpoint}/$turma',
+                );
+                final resp = await http.delete(url);
+                if (resp.statusCode == 200 || resp.statusCode == 204) {
+                  listarTurmas();
+                } else {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Erro'),
+                      content: Text(jsonDecode(resp.body)['message']),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('OK'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+              } catch (e) {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Erro'),
+                    content: Text('$e'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('OK'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+            },
+            child: const Text('Ok', style: TextStyle(color: AppColors.c6)),
           ),
         ],
       ),
@@ -272,7 +335,9 @@ class _HomeState extends State<Home> {
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: AppColors.c6,
                                   ),
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    excluir(id.toString());
+                                  },
                                   child: Text(
                                     'Excluir',
                                     style: TextStyle(color: AppColors.c1),
