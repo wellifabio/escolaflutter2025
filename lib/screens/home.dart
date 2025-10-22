@@ -348,7 +348,14 @@ class _HomeState extends State<Home> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.c5,
                                 ),
-                                onPressed: () {},
+                                onPressed: () {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const Atividades(),
+                                    ),
+                                  );
+                                },
                                 child: Text(
                                   'Visualizar',
                                   style: TextStyle(color: AppColors.c1),
