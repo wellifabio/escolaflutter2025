@@ -56,7 +56,14 @@ abstract class AppTheme {
 
   // Tema Escuro (cores invertidas)
   static ThemeData darkTheme = ThemeData.dark().copyWith(
-    scaffoldBackgroundColor: AppColors.c4, // Invertido: c4 ao invés de c1
+    scaffoldBackgroundColor: AppColors.c4,
+    appBarTheme: AppBarTheme(
+      titleTextStyle: TextStyle(
+        color: AppColors.c1,
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+      ),
+    ), // Invertido: c4 ao invés de c1
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: AppColors.c4,
